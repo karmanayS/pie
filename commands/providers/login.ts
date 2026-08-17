@@ -1,4 +1,3 @@
-
 import { Command } from 'commander';
 
 export const loginCommand = new Command("login")

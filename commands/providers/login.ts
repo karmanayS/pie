@@ -1,5 +1,5 @@
 import { Command } from 'commander';
-import { authData, providersList } from '.';
+import { providersList } from '.';
 
 export const loginCommand = new Command("login")
     .description('Lets user login into the provider (use it as default)')
@@ -11,7 +11,9 @@ export const loginCommand = new Command("login")
             console.log("Invalid provider name, please go through the provider list and choose the correct provider")
             return
         }
-        authData[provider]["key"] = api_key 
+        const content = Bun.file("/commands/providers/auth.json")
+        const authData = await content.json() 
+        authData[provider]["key"] = api_key
         await Bun.write("./commands/providers/auth.json",JSON.stringify(authData))     
-        console.log(`Logged into ${provider} successfully!`)  
+        console.log(`Logged into ${provider} successfully!`)
     })

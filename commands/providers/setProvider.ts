@@ -1,4 +1,3 @@
-
 import { Command } from 'commander';
 
 export const setProviderCommand = new Command("set")

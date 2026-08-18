@@ -4,12 +4,15 @@
   "workspaces": {
     "": {
       "dependencies": {
+        "@opencode-ai/models": "^0.0.46",
         "@types/commander": "^2.12.5",
         "chalk": "^5.6.2",
       },
     },
   },
   "packages": {
+    "@opencode-ai/models": ["@opencode-ai/models@0.0.46", "", { "peerDependencies": { "effect": "4.0.0-beta.83" }, "optionalPeers": ["effect"] }, "sha512-DwynD6bf+CqphedEs/54dh+DQF7NeyRcWCNReTt+FYLkLUlu5AddyjOA29VnUmGxMrXqW/CpDqjGlC7DI41toA=="],
+
     "@types/commander": ["@types/commander@2.12.5", "", { "dependencies": { "commander": "*" } }, "sha512-YXGZ/rz+s57VbzcvEV9fUoXeJlBt5HaKu5iUheiIWNsJs23bz6AnRuRiZBRVBLYyPnixNvVnuzM5pSaxr8Yp/g=="],
 
     "chalk": ["chalk@5.6.2", "", {}, "sha512-7NzBL0rN6fMUW+f7A6Io4h40qQlG+xGmtMxfbnH/K7TAtt8JQWVQK+6g0UXKMeVJoyV5EkkNsErQ8pVD3bLHbA=="],

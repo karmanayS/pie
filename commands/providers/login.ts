@@ -12,5 +12,6 @@ export const loginCommand = new Command("login")
             return
         }
         authData[provider]["key"] = api_key 
-        await Bun.write("./commands/providers/auth.json",JSON.stringify(authData))       
+        await Bun.write("./commands/providers/auth.json",JSON.stringify(authData))     
+        console.log(`Logged into ${provider} successfully!`)  
     })

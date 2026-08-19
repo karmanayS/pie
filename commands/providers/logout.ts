@@ -5,7 +5,7 @@ export const logoutCommand = new Command("logout")
     .description('Lets user logout from the provider')
     .option('-p, --provider <providerName>', 'Name of the provider (gemini, claude etc)', '')
     .action(async({provider}) => {
-        const content = Bun.file("/commands/providers/auth.json")
+        const content = Bun.file("./commands/providers/auth.json")
         const jsonData = await content.json()
         jsonData[provider]["key"] = ""
         await Bun.write("./commands/providers/auth.json",JSON.stringify(jsonData))

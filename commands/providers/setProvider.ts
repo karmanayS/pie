@@ -15,6 +15,7 @@ export const setProviderCommand = new Command("set")
         const stateContent = Bun.file("./state.json")
         const stateJson = await stateContent.json()
         stateJson["provider"] = provider
+        stateJson["model"] = ""
         await Bun.write("./state.json", JSON.stringify(stateJson))
         console.log("provider is set to " + provider)
     })

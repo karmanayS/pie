@@ -10,13 +10,12 @@ import { listProvidersCommand } from './list';
 
 // const providers = await client.providers()
 // export const providersList = Object.keys(providers)
-// export const authData: Record<string, {type:string,key:string,isSelected: boolean}> = {}
+// export const authData: Record<string, {type:string,key:string}> = {}
 // for (let i=0;i<providersList.length;i++) {
 //     const key = providersList[i]
 //     const value = {
 //         type: "api",
 //         key: "",
-//         isSelected: false
 //     }
 //     authData[key] = value
 // }

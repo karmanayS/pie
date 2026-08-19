@@ -12,8 +12,9 @@ export const setProviderCommand = new Command("set")
             console.log("Invalid provider name, please choose the right provider")
             return
         }
-        // have an isSelected field add to the auth.json and make it selected true for the model the user gives and based on that we will also give the models list for that provider and we also need to store the selected model state somewhere
-        jsonData[provider]["isSelected"] = true
-        await Bun.write("./commands/prviders/auth.json", JSON.stringify(jsonData))
+        const stateContent = Bun.file("./state.json")
+        const stateJson = await stateContent.json()
+        stateJson["provider"] = provider
+        await Bun.write("./state.json", JSON.stringify(stateJson))
         console.log("provider is set to " + provider)
     })

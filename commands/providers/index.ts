@@ -10,12 +10,13 @@ const client = Models.make()
 
 const providers = await client.providers()
 export const providersList = Object.keys(providers)
-export const authData: Record<string, {type:string,key:string}> = {}
+export const authData: Record<string, {type:string,key:string,isSelected: boolean}> = {}
 for (let i=0;i<providersList.length;i++) {
     const key = providersList[i]
     const value = {
         type: "api",
-        key: ""
+        key: "",
+        isSelected: false
     }
     authData[key] = value
 }

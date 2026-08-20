@@ -1,8 +1,9 @@
 import OpenAI from "openai";
+import { tools } from "../tools/schemas";
 
 interface OpenaiResponsesApiInput {
     model: string,
-    input: string
+    input: string,
 }
 
 export const openaiResponsesApi = async(args: OpenaiResponsesApiInput) => {
@@ -13,7 +14,8 @@ export const openaiResponsesApi = async(args: OpenaiResponsesApiInput) => {
 
         const response = await client.responses.create({
         model: args.model, //example: "gpt-5.6"
-        input: "Write a one-sentence bedtime story about a unicorn.",
+        input: args.input,
+        tools: tools,
         });
 
         console.log(response.output_text);

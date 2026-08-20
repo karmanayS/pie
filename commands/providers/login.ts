@@ -14,6 +14,13 @@ export const loginCommand = new Command("login")
             return
         } 
         jsonData[provider]["key"] = api_key
-        await Bun.write("./commands/providers/auth.json",JSON.stringify(jsonData))     
+        await Bun.write("./commands/providers/auth.json",JSON.stringify(jsonData))
+        
+        const state = Bun.file("./state.json")
+        const jsonState = await state.json()
+        jsonState["provider"] = provider
+        jsonState["model"] = ""
+        await Bun.write("./state.json", JSON.stringify(jsonState))     
+        
         console.log(`Logged into ${provider} successfully!`)
     })

@@ -1,13 +1,18 @@
 import OpenAI from "openai";
 
-export const openaiResponsesApi = async() => {
+interface OpenaiResponsesApiInput {
+    model: string,
+    input: string
+}
+
+export const openaiResponsesApi = async(args: OpenaiResponsesApiInput) => {
     try {
         const content = Bun.file("./commands/providers/auth.json")
         const openaiApiKey = await content.json()["openai"]["key"]  
         const client = new OpenAI({apiKey: openaiApiKey});
 
         const response = await client.responses.create({
-        model: "gpt-5.6",
+        model: args.model, //example: "gpt-5.6"
         input: "Write a one-sentence bedtime story about a unicorn.",
         });
 
@@ -16,4 +21,4 @@ export const openaiResponsesApi = async() => {
         console.log(err)
         return "Error while generating response"
     }
-}    
+}

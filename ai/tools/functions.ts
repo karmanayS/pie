@@ -52,6 +52,7 @@ export const readFile = async (path: string, offset?: number, limit?: number) =>
     }
 }
 
+
 export const writeFile = async(path:string, content:string) => {
     try{
         await Bun.write(path,content)
@@ -68,14 +69,71 @@ export const writeFile = async(path:string, content:string) => {
     }     
 }
 
-export const editFile = async(path: string, offset?: number, limit?:number) => {
+
+// Exact unique replace. Set replaceAll to true to replace every occurrence.
+export const editFile = async (
+    path: string,
+    oldString: string,
+    newString: string,
+    replaceAll = false,
+) => {
     try {
-        
+        const file = Bun.file(path)
+        if (!(await file.exists())) {
+            return {
+                success: false,
+                data: `File not found: ${path}`,
+            }
+        }
+
+        if (oldString === "") {
+            return {
+                success: false,
+                data: "oldString must not be empty",
+            }
+        }
+
+        if (oldString === newString) {
+            return {
+                success: false,
+                data: "oldString and newString are identical; nothing to change",
+            }
+        }
+
+        const text = await file.text() as string
+        const occurrences = text.split(oldString).length - 1
+
+        if (occurrences === 0) {
+            return {
+                success: false,
+                data: "oldString not found in file",
+            }
+        }
+
+        if (occurrences > 1 && !replaceAll) {
+            return {
+                success: false,
+                data: `oldString found ${occurrences} times; make it more unique or set replaceAll to true`,
+            }
+        }
+
+        const updated = replaceAll
+            ? text.replaceAll(oldString, newString)
+            : text.replace(oldString, newString)
+
+        await Bun.write(path, updated)
+
+        return {
+            success: true,
+            data: replaceAll
+                ? `Replaced ${occurrences} occurrence(s)`
+                : "File edit successful",
+        }
     } catch (err) {
         console.log(err)
         return {
             success: false,
-            data: "Error while running the editFile function"
+            data: "Error while running editFile function",
         }
     }
 }

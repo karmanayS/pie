@@ -137,3 +137,42 @@ export const editFile = async (
         }
     }
 }
+
+export const bash = async (command: string) => {
+    try {
+        if (!command.trim()) {
+            return {
+                success: false,
+                data: "command must not be empty",
+            }
+        }
+
+        const proc = Bun.spawn(["bash", "-c", command], {
+            cwd: process.cwd(),
+            stdout: "pipe",
+            stderr: "pipe",
+        })
+
+        const [stdout, stderr, exitCode] = await Promise.all([
+            new Response(proc.stdout).text(),
+            new Response(proc.stderr).text(),
+            proc.exited,
+        ])
+
+        const parts: string[] = []
+        if (stdout) parts.push(stdout.trimEnd())
+        if (stderr) parts.push(`stderr:\n${stderr.trimEnd()}`)
+        parts.push(`exit_code: ${exitCode}`)
+
+        return {
+            success: exitCode === 0,
+            data: parts.join("\n"),
+        }
+    } catch (err) {
+        console.log(err)
+        return {
+            success: false,
+            data: "Error while running bash function",
+        }
+    }
+}

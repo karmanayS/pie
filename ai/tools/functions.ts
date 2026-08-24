@@ -138,6 +138,7 @@ export const editFile = async (
     }
 }
 
+
 export const bash = async (command: string) => {
     try {
         if (!command.trim()) {

@@ -1,16 +1,3 @@
-// interface Tool {
-//   type: string
-//   name: string
-//   description: string
-//   parameters: {
-//     type: string
-//     properties: Record<string, any>
-//     required: string[]
-//     additionalProperties: boolean
-//   },
-//   strict: boolean
-// }
-
 import OpenAI from "openai";
 
 const readFileTool = {

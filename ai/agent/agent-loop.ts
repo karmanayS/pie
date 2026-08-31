@@ -1,6 +1,7 @@
 import OpenAI from "openai"
 import { openaiResponsesApi } from "../api/openai-responses"
 import { systemPrompt } from "./constants"
+import { bash, editFile, readFile, writeFile } from "../tools/functions"
 
 export const agentLoop = async(prompt:string,model:string) => {
     //agent needs to decide which api format to use based on the model and provider => there can also be a seperate agent file that does all this apart from the agent loop
@@ -15,7 +16,7 @@ export const agentLoop = async(prompt:string,model:string) => {
             role: "user",
             content: prompt
         }
-    ] as OpenAI.Responses.ResponseInput
+    ] as OpenAI.Responses.ResponseInput //optimise this input array on what to include in this array from the llm output
 
     const response = await openaiResponsesApi({model,input})
     if (!response.success) {
@@ -27,6 +28,40 @@ export const agentLoop = async(prompt:string,model:string) => {
     //tool-call loop
     for (const item of modelResponse.output) {
         if (item.type !== "function_call") continue
+
+        if (item.name === "read_file") {
+            const {path,offset,limit} = JSON.parse(item.arguments)
+            const output = await readFile(path,offset,limit)
+            input.push({
+                type: "function_call_output",
+                call_id: item.call_id,
+                output: output.data
+            })
+        } else if (item.name === "write_file") {
+            const {path,content} = JSON.parse(item.arguments)
+            const output = await writeFile(path,content)
+            input.push({
+                type: "function_call_output",
+                call_id: item.call_id,
+                output: output.data
+            })
+        } else if(item.name = "edit_file") {
+            const {path, oldString, newString, replaceAll} = JSON.parse(item.arguments)
+            const output = await editFile(path,oldString,newString,replaceAll)
+            input.push({
+                type: "function_call_output",
+                call_id: item.call_id,
+                output: output.data
+            })
+        } else if(item.name = "bash_tool") {
+            const {command} = JSON.parse(item.arguments)
+            const output = await bash(command)
+            input.push({
+                type: "function_call_output",
+                call_id: item.call_id,
+                output: output.data
+            })
+        }
     }
     //seperate worker that persists conversation history to a db for the context 
     // const provider = check the selected provider/ the provider that is logged in

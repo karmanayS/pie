@@ -3,7 +3,7 @@ import { tools } from "../tools/schemas";
 
 interface OpenaiResponsesApiInput {
     model: string,
-    input: string,
+    input: OpenAI.Responses.ResponseInput,
 }
 
 export const openaiResponsesApi = async(args: OpenaiResponsesApiInput) => {
@@ -18,7 +18,7 @@ export const openaiResponsesApi = async(args: OpenaiResponsesApiInput) => {
         tools: tools,
         });
 
-        console.log(response.output_text);
+        console.log(response);
     } catch(err) {
         console.log(err)
         return "Error while generating response"

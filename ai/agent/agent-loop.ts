@@ -16,53 +16,62 @@ export const agentLoop = async(prompt:string,model:string) => {
             role: "user",
             content: prompt
         }
-    ] as OpenAI.Responses.ResponseInput //optimise this input array on what to include in this array from the llm output to optimise tokens
+    ] as OpenAI.Responses.ResponseInput //optimise this input array on what to include in this array from the llm output to optimise tokens. And also this input variable should also be created in the agent.ts and this function should just have the while loop.
 
-    const response = await openaiResponsesApi({model,input})
-    if (!response.success) {
-        console.log(response.data)
-        return
-    }
-    const modelResponse = response.data as OpenAI.Responses.Response
-
-    //tool-call loop
-    for (const item of modelResponse.output) {
-        if (item.type !== "function_call") continue
-
-        if (item.name === "read_file") {
-            const {path,offset,limit} = JSON.parse(item.arguments)
-            const output = await readFile(path,offset,limit)
-            input.push({
-                type: "function_call_output",
-                call_id: item.call_id,
-                output: output.data
-            })
-        } else if (item.name === "write_file") {
-            const {path,content} = JSON.parse(item.arguments)
-            const output = await writeFile(path,content)
-            input.push({
-                type: "function_call_output",
-                call_id: item.call_id,
-                output: output.data
-            })
-        } else if(item.name = "edit_file") {
-            const {path, oldString, newString, replaceAll} = JSON.parse(item.arguments)
-            const output = await editFile(path,oldString,newString,replaceAll)
-            input.push({
-                type: "function_call_output",
-                call_id: item.call_id,
-                output: output.data
-            })
-        } else if(item.name = "bash_tool") {
-            const {command} = JSON.parse(item.arguments)
-            const output = await bash(command)
-            input.push({
-                type: "function_call_output",
-                call_id: item.call_id,
-                output: output.data
-            })
+    while (true) {
+        const response = await openaiResponsesApi({model,input})
+        if (!response.success) {
+            return response.data
         }
-    }
+        const modelResponse = response.data as OpenAI.Responses.Response
+
+        let calledTool = false
+        
+        for (const item of modelResponse.output) {
+            if (item.type !== "function_call") continue
+
+            if (item.name === "read_file") {
+                const {path,offset,limit} = JSON.parse(item.arguments)
+                const output = await readFile(path,offset,limit)
+                input.push({
+                    type: "function_call_output",
+                    call_id: item.call_id,
+                    output: output.data
+                })
+                calledTool = true
+            } else if (item.name === "write_file") {
+                const {path,content} = JSON.parse(item.arguments)
+                const output = await writeFile(path,content)
+                input.push({
+                    type: "function_call_output",
+                    call_id: item.call_id,
+                    output: output.data
+                })
+                calledTool = true
+            } else if(item.name = "edit_file") {
+                const {path, oldString, newString, replaceAll} = JSON.parse(item.arguments)
+                const output = await editFile(path,oldString,newString,replaceAll)
+                input.push({
+                    type: "function_call_output",
+                    call_id: item.call_id,
+                    output: output.data
+                })
+                calledTool = true
+            } else if(item.name = "bash_tool") {
+                const {command} = JSON.parse(item.arguments)
+                const output = await bash(command)
+                input.push({
+                    type: "function_call_output",
+                    call_id: item.call_id,
+                    output: output.data
+                })
+                calledTool = true
+            }
+        }
+        if (!calledTool) {
+            return modelResponse.output_text
+        }
+    }    
     //seperate worker that persists conversation history to a db for the context 
     //now we need to check the specific api format this provider uses and use that to call the llm and then based on the output/end_token that the llm gives us, we need to decide whether to continue the loop or end it and give the output to the user
     //this is a high level of the architecture but there are some intricacies like what is streaming etc

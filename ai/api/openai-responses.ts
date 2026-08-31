@@ -9,8 +9,8 @@ interface OpenaiResponsesApiInput {
 export const openaiResponsesApi = async(args: OpenaiResponsesApiInput) => {
     try {
         const content = Bun.file("./commands/providers/auth.json")
-        const openaiApiKey = await content.json()["openai"]["key"]  
-        const client = new OpenAI({apiKey: openaiApiKey});
+        const openaiApiKey = await content.json()  
+        const client = new OpenAI({apiKey: openaiApiKey["openai"]["key"]});
 
         const response = await client.responses.create({
         model: args.model, //example: "gpt-5.6"

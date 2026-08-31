@@ -6,6 +6,6 @@ export const agentCommand = new Command("agent")
   .option('-p, --prompt <prompt>', 'prompt', '')
   .action(async({prompt}) => {
     const file = Bun.file("./state.json")
-    const model = await file.json()["model"]
-    await agentLoop(prompt,model)
+    const state = await file.json()
+    await agentLoop(prompt,state["model"])
   });

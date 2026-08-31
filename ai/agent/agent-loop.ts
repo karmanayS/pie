@@ -16,7 +16,18 @@ export const agentLoop = async(prompt:string,model:string) => {
             content: prompt
         }
     ] as OpenAI.Responses.ResponseInput
-    const output = await openaiResponsesApi({model,input})
+
+    const response = await openaiResponsesApi({model,input})
+    if (!response.success) {
+        console.log(response.data)
+        return
+    }
+    const modelResponse = response.data as OpenAI.Responses.Response
+
+    //tool-call loop
+    for (const item of modelResponse.output) {
+        if (item.type !== "function_call") continue
+    }
     //seperate worker that persists conversation history to a db for the context 
     // const provider = check the selected provider/ the provider that is logged in
     //const model = check the selected model

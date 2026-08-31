@@ -18,9 +18,9 @@ export const openaiResponsesApi = async(args: OpenaiResponsesApiInput) => {
         tools: tools,
         });
 
-        console.log(response);
+        return {success: true,data: response};
     } catch(err) {
         console.log(err)
-        return "Error while generating response"
+        return {success: false,data:"Error while generating response"}
     }
 }

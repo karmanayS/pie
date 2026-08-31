@@ -16,7 +16,7 @@ export const agentLoop = async(prompt:string,model:string) => {
             role: "user",
             content: prompt
         }
-    ] as OpenAI.Responses.ResponseInput //optimise this input array on what to include in this array from the llm output
+    ] as OpenAI.Responses.ResponseInput //optimise this input array on what to include in this array from the llm output to optimise tokens
 
     const response = await openaiResponsesApi({model,input})
     if (!response.success) {
@@ -64,8 +64,6 @@ export const agentLoop = async(prompt:string,model:string) => {
         }
     }
     //seperate worker that persists conversation history to a db for the context 
-    // const provider = check the selected provider/ the provider that is logged in
-    //const model = check the selected model
     //now we need to check the specific api format this provider uses and use that to call the llm and then based on the output/end_token that the llm gives us, we need to decide whether to continue the loop or end it and give the output to the user
     //this is a high level of the architecture but there are some intricacies like what is streaming etc
 }

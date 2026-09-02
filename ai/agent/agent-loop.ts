@@ -7,7 +7,7 @@ export const agentLoop = async(prompt:string,model:string) => {
     //agent needs to decide which api format to use based on the model and provider => there can also be a seperate agent file that does all this apart from the agent loop
 
     //user gives a prompt => we give the prompt and the available tools to the llm => llm gives us the response => if tool_call(end_token=tool_use then we execute the tool and give the whole converstation to the llm again till we get the end token) , if there is no tool call then we assume that the conversation has ended.
-    const input = [
+    const input: OpenAI.Responses.ResponseInput = [
         {
             role: "system",
             content: systemPrompt
@@ -16,15 +16,18 @@ export const agentLoop = async(prompt:string,model:string) => {
             role: "user",
             content: prompt
         }
-    ] as OpenAI.Responses.ResponseInput //optimise this input array on what to include in this array from the llm output to optimise tokens. And also this input variable should also be created in the agent.ts and this function should just have the while loop.
+    ] //optimise this input array on what to include in this array from the llm output to optimise tokens. And also this input variable should also be created in the agent.ts and this function should just have the while loop.
 
     while (true) {
         const response = await openaiResponsesApi({model,input})
         if (!response.success) {
             return response.data
         }
-        const modelResponse = response.data as OpenAI.Responses.Response
 
+        const modelResponse = response.data as OpenAI.Responses.Response
+        
+        input.push(...(modelResponse.output as OpenAI.Responses.ResponseInput))
+        
         let calledTool = false
         
         for (const item of modelResponse.output) {
@@ -48,7 +51,7 @@ export const agentLoop = async(prompt:string,model:string) => {
                     output: output.data
                 })
                 calledTool = true
-            } else if(item.name = "edit_file") {
+            } else if(item.name === "edit_file") {
                 const {path, oldString, newString, replaceAll} = JSON.parse(item.arguments)
                 const output = await editFile(path,oldString,newString,replaceAll)
                 input.push({
@@ -57,7 +60,7 @@ export const agentLoop = async(prompt:string,model:string) => {
                     output: output.data
                 })
                 calledTool = true
-            } else if(item.name = "bash_tool") {
+            } else if(item.name === "bash_tool") {
                 const {command} = JSON.parse(item.arguments)
                 const output = await bash(command)
                 input.push({

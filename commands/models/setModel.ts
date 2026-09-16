@@ -8,7 +8,7 @@ export const setModelCommand = new Command("set")
     .option("-m, --model <model_name>","Name of the model","")
     .action(async({model}) => {
         const providers = await client.providers()
-        const state = Bun.file("./state.json")
+        const state = Bun.file("./db/state.json")
         const stateJson = await state.json()
         const selectedProvider = stateJson["provider"]
         const models = providers[selectedProvider]["models"]
@@ -19,6 +19,6 @@ export const setModelCommand = new Command("set")
             return
         }
         stateJson["model"] = model
-        await Bun.write("./state.json", JSON.stringify(stateJson))
+        await Bun.write("./db/state.json", JSON.stringify(stateJson))
         console.log(`Model set to ${model}`)
     })

@@ -25,6 +25,7 @@ export const modelsListCommand = new Command("list")
     for (let i=0;i<modelsList.length;i++) {
       if (modelsList[i] === stateJson.model) {
         console.log(modelsList[i] + " (selected)")
+        continue
       }
       console.log(modelsList[i])  
     }

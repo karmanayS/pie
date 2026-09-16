@@ -2,6 +2,7 @@ import { Command } from 'commander';
 import { loginCommand } from './login';
 import { logoutCommand } from './logout';
 import { listProvidersCommand } from './list';
+import { setProviderCommand } from './setProvider';
 // import { Models } from "@opencode-ai/models"
 
 // const client = Models.make()
@@ -26,4 +27,4 @@ export const providerCommand = new Command("providers")
     .addCommand(listProvidersCommand)
     .addCommand(loginCommand)
     .addCommand(logoutCommand)
-    // .addCommand(setProviderCommand)
+    .addCommand(setProviderCommand)

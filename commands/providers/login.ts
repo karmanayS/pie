@@ -31,7 +31,6 @@ export const loginCommand = new Command("login")
         try {
             authJson = await auth.json()
         } catch(err) {
-            console.log("Catch")
             await Bun.write("./db/auth.json",JSON.stringify({}))
             authJson = await auth.json()
         }

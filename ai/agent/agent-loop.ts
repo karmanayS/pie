@@ -3,10 +3,10 @@ import { openaiResponsesApi } from "../api/openai-responses"
 import { systemPrompt } from "./constants"
 import { bash, editFile, readFile, writeFile } from "../tools/functions"
 
-export const agentLoop = async(prompt:string,model:string) => {
+export const agentLoop = async(prompt:string, model:string, resume = false, chatId?: string) => {
     //agent needs to decide which api format to use based on the model and provider => there can also be a seperate agent file that does all this apart from the agent loop
 
-    const input: OpenAI.Responses.ResponseInput = [
+    let input: OpenAI.Responses.ResponseInput = [
         {
             role: "system",
             content: systemPrompt
@@ -16,6 +16,18 @@ export const agentLoop = async(prompt:string,model:string) => {
             content: prompt
         }
     ] //optimise this input array on what to include in this array from the llm output to optimise tokens.
+
+    const content = Bun.file("./db/chats.json")
+    const jsonChats = await content.json()
+    let chat;
+
+    if (resume && chatId) {
+        chat = jsonChats.find(c => c.id === chatId)
+        input = [...chat.input, {
+            role: "user",
+            content: prompt
+        }]
+    }
 
     while (true) {
         const response = await openaiResponsesApi({model,input})
@@ -71,6 +83,17 @@ export const agentLoop = async(prompt:string,model:string) => {
             }
         }
         if (!calledTool) {
+            // push the input array to chats db
+            if (resume && chatId) {
+                chat.input = input
+            } else {
+                jsonChats.push({
+                    id: crypto.randomUUID(),
+                    title: prompt,
+                    input
+                })
+            }
+            Bun.write("./db/chats.json", JSON.stringify(jsonChats))
             return modelResponse.output_text
         }
     }    

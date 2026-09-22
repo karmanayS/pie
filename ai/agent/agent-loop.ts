@@ -17,11 +17,13 @@ export const agentLoop = async(prompt:string, model:string, resume = false, chat
         }
     ] //optimise this input array on what to include in this array from the llm output to optimise tokens.
 
-    const content = Bun.file("./db/chats.json")
-    const jsonChats = await content.json()
+    
+    let jsonChats = [];
     let chat;
 
     if (resume && chatId) {
+        const content = Bun.file("./db/chats.json")
+        jsonChats = await content.json()
         chat = jsonChats.find(c => c.id === chatId)
         input = [...chat.input, {
             role: "user",
@@ -90,6 +92,7 @@ export const agentLoop = async(prompt:string, model:string, resume = false, chat
                 jsonChats.push({
                     id: crypto.randomUUID(),
                     title: prompt,
+                    timestamp: Date.now(),
                     input
                 })
             }

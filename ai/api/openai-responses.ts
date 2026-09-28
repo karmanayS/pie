@@ -1,5 +1,6 @@
 import OpenAI from "openai";
 import { tools } from "../tools/schemas";
+import { systemPrompt } from "../agent/constants";
 
 interface OpenaiResponsesApiInput {
     model: string,
@@ -14,6 +15,7 @@ export const openaiResponsesApi = async(args: OpenaiResponsesApiInput) => {
 
         const response = await client.responses.create({
         model: args.model, //example: "gpt-5.6"
+        instructions: systemPrompt,
         input: args.input,
         tools: tools,
         });

@@ -8,10 +8,6 @@ export const agentLoop = async(prompt:string, model:string, resume = false, chat
 
     let input: OpenAI.Responses.ResponseInput = [
         {
-            role: "system",
-            content: systemPrompt
-        },
-        {
             role: "user",
             content: prompt
         }

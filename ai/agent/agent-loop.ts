@@ -1,6 +1,5 @@
 import OpenAI from "openai"
 import { openaiResponsesApi } from "../api/openai-responses"
-import { systemPrompt } from "./constants"
 import { bash, editFile, readFile, writeFile } from "../tools/functions"
 
 export const agentLoop = async(prompt:string, model:string, resume = false, chatId?: string) => {

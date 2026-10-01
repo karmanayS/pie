@@ -1,4 +1,6 @@
 import { Models } from "@opencode-ai/models"
+import { summarisationPrompt } from "./constants"
+import { openaiResponsesApi } from "../api/openai-responses";
 
 const client = Models.make()
 
@@ -110,8 +112,7 @@ export const compactContext = async(chatId:string) => {
 
     const stringifiedMessagesToSummarise = JSON.stringify(messagesToSummarise)
 
-
-
+    const prompt = `<conversation-json>\n${stringifiedMessagesToSummarise}\n</conversation-json>\n\n` + summarisationPrompt
     // now this summary should be persisted somewhere else or in the db chats file only ?
     // if it is stored somewhere else then how should it look, should it look like a normal input that we pass to the llm only or should it look different if different then how should it be passed to the llm
     // and when later a user resumes a session then how do we know that this session was compacted and we need to send the compacted input ?

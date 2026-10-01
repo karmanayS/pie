@@ -1,6 +1,8 @@
 import OpenAI from "openai"
 import { openaiResponsesApi } from "../api/openai-responses"
 import { bash, editFile, readFile, writeFile } from "../tools/functions"
+import { systemPrompt } from "./constants"
+import { tools } from "../tools/schemas"
 
 export const agentLoop = async(prompt:string, model:string, resume = false, chatId?: string) => {
     //agent needs to decide which api format to use based on the model and provider => there can also be a seperate agent file that does all this apart from the agent loop
@@ -27,7 +29,7 @@ export const agentLoop = async(prompt:string, model:string, resume = false, chat
     }
 
     while (true) {
-        const response = await openaiResponsesApi({model,input})
+        const response = await openaiResponsesApi({model,input,instructions: systemPrompt, tools: tools})
         if (!response.success) {
             return response.data
         }

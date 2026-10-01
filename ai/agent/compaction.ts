@@ -21,12 +21,47 @@ export const compactContext = async(chatId:string) => {
     // iterate backwards through the chat
     const chatFile = Bun.file("./db/chats.json")
     const chatsJson = await chatFile.json()
-    const chat = chatsJson[chatId]
+    const chat = chatsJson.find((c:any) => c.id === chatId)
 
     //dont compact a certain amount of recent messages
     //the separation point shouldnt be somewhere where between tool call and tool result, they both should be together always
     let countedTokens = 0;
-    for ()
+    for (let i=chat.input.length - 1; i>=0 ; i--) {
+        const currentChatInput = chat.input[i]
+        
+        if (countedTokens >= 20000) {
+            if (currentChatInput.type !== "function_call_output") {
+                break
+            }
+        }
+        
+        let chars = 0;
+
+        // roles: user, developer, assistant, function call
+        
+        if (currentChatInput.type === "function_call") {
+            chars += currentChatInput.name.length + JSON.stringify(currentChatInput.arguments).length
+        } else if (currentChatInput.type === "function_call_output") {
+            chars += currentChatInput.output.length
+        } else {
+            switch (currentChatInput.role) {
+                case "user":
+                    chars += currentChatInput.content.length
+                    break;
+                case "assistant":
+                    for (let i=0;i<currentChatInput.content.length;i++) {
+                        if (currentChatInput.content[i].type === "output_text") {
+                            chars += currentChatInput.content[i].text.length
+                        }
+                    }
+                    break
+                default:
+                    break;
+            }
+        }
+
+        countedTokens += Math.ceil(chars / 4)
+    }
 
     //compact the rest of the messages behind that. Compaction should be smart and optimised ie what to keep and what not to keep and how to summarise
     // now this summary should be persisted somewhere else or in the db chats file only ?

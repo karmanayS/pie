@@ -5,7 +5,7 @@ import OpenAI from "openai"
 
 const client = Models.make()
 
-export const isContextFull = async(usedTokens:number,provider:string,model:string) => {
+export const contextCheck = async(usedTokens:number,provider:string,model:string) => {
     const providerInfo = await client.providers() 
     const modelDetails = providerInfo[provider].models[model]
     const modelContextWindow = modelDetails.limit.context
@@ -19,7 +19,6 @@ export const isContextFull = async(usedTokens:number,provider:string,model:strin
 
 
 export const compactContext = async(chatId:string,model: string) => {
-
     const chatFile = Bun.file("./db/chats.json")
     const chatsJson = await chatFile.json()
     const chat = chatsJson.find((c:any) => c.id === chatId)

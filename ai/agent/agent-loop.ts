@@ -3,6 +3,7 @@ import { openaiResponsesApi } from "../api/openai-responses"
 import { bash, editFile, readFile, writeFile } from "../tools/functions"
 import { systemPrompt } from "./constants"
 import { tools } from "../tools/schemas"
+import { compactContext, contextCheck } from "./compaction"
 
 export const agentLoop = async(prompt:string, model:string, provider:string, resume = false, chatId?: string) => {
     //agent needs to decide which api format to use based on the model and provider => there can also be a seperate agent file that does all this apart from the agent loop
@@ -55,6 +56,11 @@ export const agentLoop = async(prompt:string, model:string, provider:string, res
         }
 
         const modelResponse = response.data as OpenAI.Responses.Response
+
+        const isContextFull = await contextCheck(modelResponse.usage?.total_tokens!,provider,model)
+        if (isContextFull && chatId) {
+            await compactContext(chatId,model)
+        }
         
         input.push(...(modelResponse.output as OpenAI.Responses.ResponseInput))
         
@@ -113,7 +119,7 @@ export const agentLoop = async(prompt:string, model:string, provider:string, res
                     input
                 })
             }
-            Bun.write("./db/chats.json", JSON.stringify(jsonChats))
+            Bun.write("./db/chats.json", JSON.stringify(jsonChats)) //asynchronoulsy writes to the file , dont await
             return modelResponse.output_text
         }
     }    

@@ -4,28 +4,48 @@ import { bash, editFile, readFile, writeFile } from "../tools/functions"
 import { systemPrompt } from "./constants"
 import { tools } from "../tools/schemas"
 
-export const agentLoop = async(prompt:string, model:string, resume = false, chatId?: string) => {
+export const agentLoop = async(prompt:string, model:string, provider:string, resume = false, chatId?: string) => {
     //agent needs to decide which api format to use based on the model and provider => there can also be a seperate agent file that does all this apart from the agent loop
-
     let input: OpenAI.Responses.ResponseInput = [
         {
             role: "user",
             content: prompt
         }
-    ] //optimise this input array on what to include in this array from the llm output to optimise tokens.
+    ]
 
-    
     let jsonChats = [];
     let chat;
+    let latestCompactionInputEntry;
 
     if (resume && chatId) {
         const content = Bun.file("./db/chats.json")
         jsonChats = await content.json()
         chat = jsonChats.find(c => c.id === chatId)
-        input = [...chat.input, {
-            role: "user",
-            content: prompt
-        }]
+
+        for (let i=0;i<chat.input.length;i++) {
+            if (chat.input[i].type === "compaction") {
+                latestCompactionInputEntry = chat.input[i] 
+            }
+        }
+
+        if (latestCompactionInputEntry) {
+            const unsummarizedMessages = []
+            for (let i=latestCompactionInputEntry["oldestNonCompactedInputIndex"]; i<chat.input.length; i++) {
+                if (chat.input[i].type === "compaction") {
+                    continue
+                }
+                unsummarizedMessages.push(chat.input[i])
+            }
+            input = [latestCompactionInputEntry, ...unsummarizedMessages, {
+                role: "user",
+                content: prompt
+            }]
+        } else {
+            input = [...chat.input, {
+                role: "user",
+                content: prompt
+            }]
+        }
     }
 
     while (true) {
@@ -97,6 +117,4 @@ export const agentLoop = async(prompt:string, model:string, resume = false, chat
             return modelResponse.output_text
         }
     }    
-    //seperate worker that persists conversation history to a db for the context so that user can continue a session. 
-    //Streming ?
 }

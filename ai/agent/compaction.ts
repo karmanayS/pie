@@ -5,12 +5,9 @@ import OpenAI from "openai"
 
 const client = Models.make()
 
-export const isContextFull = async(usedTokens: number) => {
-    const state = Bun.file("./db/state.json")
-    const stateJson = await state.json()
+export const isContextFull = async(usedTokens:number,provider:string,model:string) => {
     const providerInfo = await client.providers() 
-
-    const modelDetails = providerInfo[stateJson.provider].models[stateJson.model]
+    const modelDetails = providerInfo[provider].models[model]
     const modelContextWindow = modelDetails.limit.context
     const maxModelOutputTokens = modelDetails.limit.output
 

@@ -11,6 +11,6 @@ export const agentCommand = new Command("agent")
       return
     } 
     const state = await file.json()
-    const output = await agentLoop(prompt,state["model"])
+    const output = await agentLoop(prompt,state["model"],state["provider"])
     console.log(output)
   });

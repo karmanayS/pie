@@ -22,15 +22,13 @@ export const isContextFull = async(usedTokens: number) => {
 
 
 export const compactContext = async(chatId:string,model: string) => {
-    // iterate backwards through the chat
+
     const chatFile = Bun.file("./db/chats.json")
     const chatsJson = await chatFile.json()
     const chat = chatsJson.find((c:any) => c.id === chatId)
 
-    //dont compact a certain amount of recent messages
-    //the separation point shouldnt be somewhere where between tool call and tool result, they both should be together always
     let countedTokens = 0;
-    let compactTriggerIndex = 0;
+    let compactTriggerIndex = 0; //this is the index of the last message that will be inlcuded in the summary
     for (let i=chat.input.length - 1; i>=0 ; i--) {
         const currentChatInput = chat.input[i]
         
@@ -69,7 +67,6 @@ export const compactContext = async(chatId:string,model: string) => {
         countedTokens += Math.ceil(chars / 4)
     }
 
-    //compact the rest of the messages behind that. Compaction should be smart and optimised ie what to keep and what not to keep and how to summarise
     const messagesToSummarise = []
 
     for (let i=0;i<=compactTriggerIndex;i++) {
@@ -115,14 +112,18 @@ export const compactContext = async(chatId:string,model: string) => {
 
     const prompt = `<conversation-json>\n${stringifiedMessagesToSummarise}\n</conversation-json>\n\n` + summarisationPrompt
 
-    const response = await openaiResponsesApi({model,input: [{role: "user", content: prompt}],instructions: summarisationSystemPrompt})
+    const response = await openaiResponsesApi({model,input: [{role: "developer", content: prompt}],instructions: summarisationSystemPrompt})
 
     const modelResponse = response.data as OpenAI.Responses.Response
     
-    // now this summary should be persisted somewhere else or in the db chats file only ?
-    // if it is stored somewhere else then how should it look, should it look like a normal input that we pass to the llm only or should it look different if different then how should it be passed to the llm
-    // and when later a user resumes a session then how do we know that this session was compacted and we need to send the compacted input ?
-    // how does summarisation of an already summarised chat will work ?
+    chat.input.push({
+        "type": "compaction",
+        "id": crypto.randomUUID(),
+        "oldestNonCompactedInputIndex": compactTriggerIndex + 1,
+        "summary": modelResponse.output_text,
+    })
+    
+    await Bun.write("./db/chats.json",chatsJson)
 
     return 
 }

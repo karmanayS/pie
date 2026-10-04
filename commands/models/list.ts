@@ -1,5 +1,6 @@
 import { Command } from "commander";
 import { Models } from "@opencode-ai/models"
+import { readAppState } from "../../storage/state";
 
 const client = Models.make()
 
@@ -7,18 +8,11 @@ export const modelsListCommand = new Command("list")
   .description('Returns all the models supported by the selected provider')
   .action(async() => {
     const providers = await client.providers()
-    const state = Bun.file("./db/state.json")
-    if (!(await state.exists())) {
-      console.log(`select a provdier first to see the models supported by that provider, checkout the "providers set" command`)
-      return
-    }
-    let stateJson;
-    try {
-      stateJson = await state.json()
-    } catch(err) {
+    const stateJson = await readAppState()
+    if (!stateJson) {
       console.log(`select a provider first to see the models supported by that provider, checkout the "providers set" command`)
       return
-    }  
+    }
     const selectedProvider = stateJson.provider 
     const models = providers[selectedProvider]["models"]
     const modelsList = Object.keys(models)

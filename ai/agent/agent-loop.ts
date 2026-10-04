@@ -4,6 +4,8 @@ import { bash, editFile, readFile, writeFile } from "../tools/functions"
 import { systemPrompt } from "./constants"
 import { tools } from "../tools/schemas"
 import { compactContext, contextCheck } from "./compaction"
+import { readChats, writeChats } from "../../storage/chats"
+import type { Chat, ChatInputItem, CompactionEntry } from "../../types"
 
 export const agentLoop = async(prompt:string, model:string, provider:string, resume = false, chatId?: string) => {
     //agent needs to decide which api format to use based on the model and provider => there can also be a seperate agent file that does all this apart from the agent loop
@@ -14,35 +16,42 @@ export const agentLoop = async(prompt:string, model:string, provider:string, res
         }
     ]
 
-    let jsonChats = [];
-    let chat;
-    let latestCompactionInputEntry;
+    let jsonChats: Chat[] = [];
+    let chat: Chat | undefined;
+    let latestCompactionInputEntry: CompactionEntry | undefined;
 
     if (resume && chatId) {
-        const content = Bun.file("./db/chats.json")
-        jsonChats = await content.json()
+        jsonChats = await readChats()
         chat = jsonChats.find(c => c.id === chatId)
 
+        if (!chat) {
+            return `Chat not found: ${chatId}`
+        }
+
         for (let i=0;i<chat.input.length;i++) {
-            if (chat.input[i].type === "compaction") {
-                latestCompactionInputEntry = chat.input[i] 
+            const chatInput = chat.input[i] 
+            if (chatInput.type === "local_compaction") {
+                latestCompactionInputEntry = chatInput
             }
         }
 
         if (latestCompactionInputEntry) {
-            const unsummarizedMessages = []
+            const unsummarizedMessages: OpenAI.Responses.ResponseInputItem[] = []
             for (let i=latestCompactionInputEntry["oldestNonCompactedInputIndex"]; i<chat.input.length; i++) {
-                if (chat.input[i].type === "compaction") {
+                if (chat.input[i].type === "local_compaction") {
                     continue
                 }
-                unsummarizedMessages.push(chat.input[i])
+                unsummarizedMessages.push(chat.input[i] as OpenAI.Responses.ResponseInputItem)
             }
-            input = [latestCompactionInputEntry, ...unsummarizedMessages, {
+            input = [{
+                role: "developer",
+                content: `Previous conversation summary:\n${latestCompactionInputEntry.summary}`
+            }, ...unsummarizedMessages, {
                 role: "user",
                 content: prompt
             }]
         } else {
-            input = [...chat.input, {
+            input = [...(chat.input as OpenAI.Responses.ResponseInputItem[]), {
                 role: "user",
                 content: prompt
             }]
@@ -109,7 +118,7 @@ export const agentLoop = async(prompt:string, model:string, provider:string, res
         }
         if (!calledTool) {
             // push the input array to chats db
-            if (resume && chatId) {
+            if (chat && resume && chatId) {
                 chat.input = input
             } else {
                 jsonChats.push({
@@ -119,7 +128,7 @@ export const agentLoop = async(prompt:string, model:string, provider:string, res
                     input
                 })
             }
-            Bun.write("./db/chats.json", JSON.stringify(jsonChats)) //asynchronoulsy writes to the file , dont await
+            await writeChats(jsonChats)
             return modelResponse.output_text
         }
     }    

@@ -1,5 +1,6 @@
 import { Command } from "commander";
 import { Models } from "@opencode-ai/models"
+import { readAppState, writeAppState } from "../../storage/state";
 
 const client = Models.make()
 
@@ -8,8 +9,11 @@ export const setModelCommand = new Command("set")
     .option("-m, --model <model_name>","Name of the model","")
     .action(async({model}) => {
         const providers = await client.providers()
-        const state = Bun.file("./db/state.json")
-        const stateJson = await state.json()
+        const stateJson = await readAppState()
+        if (!stateJson) {
+            console.log("Please select a provider first")
+            return
+        }
         const selectedProvider = stateJson["provider"]
         const models = providers[selectedProvider]["models"]
         const modelsList = Object.keys(models)
@@ -19,6 +23,6 @@ export const setModelCommand = new Command("set")
             return
         }
         stateJson["model"] = model
-        await Bun.write("./db/state.json", JSON.stringify(stateJson))
+        await writeAppState(stateJson)
         console.log(`Model set to ${model}`)
     })

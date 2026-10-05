@@ -20,3 +20,35 @@ export const readAppState = async (): Promise<AppState | null> => {
 export const writeAppState = async (state: AppState): Promise<void> => {
     await Bun.write(statePath, JSON.stringify(state))
 }
+
+export const getSelectedChatId = async (): Promise<string | null> => {
+    const state = await readAppState()
+    return state?.selectedChatId ?? null
+}
+
+export const selectChat = async (chatId: string): Promise<void> => {
+    const selectedChatId = chatId.trim()
+    if (!selectedChatId) {
+        throw new Error("Chat ID must not be empty")
+    }
+
+    const state = await readAppState()
+    if (!state) {
+        throw new Error("Application state has not been initialized")
+    }
+
+    await writeAppState({
+        ...state,
+        selectedChatId,
+    })
+}
+
+export const clearSelectedChat = async (): Promise<void> => {
+    const state = await readAppState()
+    if (!state) return
+
+    await writeAppState({
+        ...state,
+        selectedChatId: null,
+    })
+}

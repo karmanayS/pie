@@ -18,6 +18,7 @@ export const setProviderCommand = new Command("set")
         const stateJson = await readAppState() ?? {
             provider: "",
             model: "",
+            selectedChatId: null,
         }
         stateJson["provider"] = provider
         stateJson["model"] = ""

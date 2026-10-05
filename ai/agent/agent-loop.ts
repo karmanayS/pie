@@ -5,7 +5,7 @@ import { systemPrompt } from "./constants"
 import { tools } from "../tools/schemas"
 import { compactContext, contextCheck } from "./compaction"
 import { readChats, writeChats } from "../../storage/chats"
-import type { Chat, ChatInputItem, CompactionEntry } from "../../types"
+import type { Chat, CompactionEntry } from "../../types"
 
 export const agentLoop = async(prompt:string, model:string, provider:string, resume = false, chatId?: string) => {
     //agent needs to decide which api format to use based on the model and provider => there can also be a seperate agent file that does all this apart from the agent loop
@@ -16,12 +16,11 @@ export const agentLoop = async(prompt:string, model:string, provider:string, res
         }
     ]
 
-    let jsonChats: Chat[] = [];
+    const jsonChats: Chat[] = await readChats();
     let chat: Chat | undefined;
     let latestCompactionInputEntry: CompactionEntry | undefined;
 
     if (resume && chatId) {
-        jsonChats = await readChats()
         chat = jsonChats.find(c => c.id === chatId)
 
         if (!chat) {

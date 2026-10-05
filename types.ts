@@ -22,5 +22,5 @@ export interface Chat {
 export interface AppState {
     provider: string
     model: string
-    selectedChatId?: string | null
+    selectedChatId: string | null
 }

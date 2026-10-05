@@ -5,9 +5,9 @@ import { systemPrompt } from "./constants"
 import { tools } from "../tools/schemas"
 import { compactContext, contextCheck } from "./compaction"
 import { readChats, writeChats } from "../../storage/chats"
-import type { Chat, CompactionEntry } from "../../types"
+import type { AgentLoopResult, Chat, CompactionEntry } from "../../types"
 
-export const agentLoop = async(prompt:string, model:string, provider:string, resume = false, chatId?: string) => {
+export const agentLoop = async(prompt:string, model:string, provider:string, chatId?: string): Promise<AgentLoopResult> => {
     //agent needs to decide which api format to use based on the model and provider => there can also be a seperate agent file that does all this apart from the agent loop
     let input: OpenAI.Responses.ResponseInput = [
         {
@@ -17,14 +17,18 @@ export const agentLoop = async(prompt:string, model:string, provider:string, res
     ]
 
     const jsonChats: Chat[] = await readChats();
+    const activeChatId = chatId ?? crypto.randomUUID()
     let chat: Chat | undefined;
     let latestCompactionInputEntry: CompactionEntry | undefined;
 
-    if (resume && chatId) {
+    if (chatId) {
         chat = jsonChats.find(c => c.id === chatId)
 
         if (!chat) {
-            return `Chat not found: ${chatId}`
+            return {
+                success: false,
+                error: `Chat not found: ${chatId}`,
+            }
         }
 
         for (let i=0;i<chat.input.length;i++) {
@@ -60,7 +64,10 @@ export const agentLoop = async(prompt:string, model:string, provider:string, res
     while (true) {
         const response = await openaiResponsesApi({model,input,instructions: systemPrompt, tools: tools})
         if (!response.success) {
-            return response.data
+            return {
+                success: false,
+                error: String(response.data),
+            }
         }
 
         const modelResponse = response.data as OpenAI.Responses.Response
@@ -116,19 +123,22 @@ export const agentLoop = async(prompt:string, model:string, provider:string, res
             }
         }
         if (!calledTool) {
-            // push the input array to chats db
-            if (chat && resume && chatId) {
+            if (chat) {
                 chat.input = input
             } else {
                 jsonChats.push({
-                    id: crypto.randomUUID(),
+                    id: activeChatId,
                     title: prompt,
                     timestamp: Date.now(),
                     input
                 })
             }
             await writeChats(jsonChats)
-            return modelResponse.output_text
+            return {
+                success: true,
+                output: modelResponse.output_text,
+                chatId: activeChatId,
+            }
         }
     }    
 }

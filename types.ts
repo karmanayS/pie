@@ -24,3 +24,14 @@ export interface AppState {
     model: string
     selectedChatId: string | null
 }
+
+export type AgentLoopResult =
+    | {
+        success: true
+        output: string
+        chatId: string
+    }
+    | {
+        success: false
+        error: string
+    }

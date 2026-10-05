@@ -1,6 +1,6 @@
 import { Command } from "commander";
 import { agentLoop } from "../ai/agent/agent-loop";
-import { readAppState } from "../storage/state";
+import { readAppState, selectChat } from "../storage/state";
 
 export const agentCommand = new Command("agent")
   .description('Runs the agent')
@@ -11,6 +11,17 @@ export const agentCommand = new Command("agent")
       console.log("Please login to a provider first")
       return
     }
-    const output = await agentLoop(prompt,state.model,state.provider)
-    console.log(output)
+    const result = await agentLoop(
+      prompt,
+      state.model,
+      state.provider,
+      state.selectedChatId ?? undefined,
+    )
+    if (!result.success) {
+      console.log(result.error)
+      return
+    }
+
+    await selectChat(result.chatId)
+    console.log(result.output)
   });

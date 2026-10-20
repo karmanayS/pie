@@ -2,7 +2,7 @@ import { Models } from "@opencode-ai/models"
 import { summarisationPrompt, summarisationSystemPrompt } from "./constants"
 import { openaiResponsesApi } from "../api/openai-responses";
 import OpenAI from "openai"
-import { readChats, writeChats } from "../../storage/chats";
+import type { ChatInputItem, CompactionEntry } from "../../types";
 
 const client = Models.make()
 
@@ -19,18 +19,11 @@ export const contextCheck = async(usedTokens:number,provider:string,model:string
 }
 
 
-export const compactContext = async(chatId:string,model: string) => {
-    const chatsJson = await readChats()
-    const chat = chatsJson.find((c:any) => c.id === chatId)
-
-    if (!chat) {
-        throw new Error(`Chat not found: ${chatId}`)
-    }
-
+export const compactContext = async(chatInput: ChatInputItem[],model: string): Promise<CompactionEntry> => {
     let countedTokens = 0;
     let compactTriggerIndex = 0; //this is the index of the last message that will be inlcuded in the summary
-    for (let i=chat.input.length - 1; i>=0 ; i--) {
-        const currentChatInput = chat.input[i]
+    for (let i=chatInput.length - 1; i>=0 ; i--) {
+        const currentChatInput = chatInput[i]
         
         if (countedTokens >= 20000) {
             if (currentChatInput.type !== "function_call_output") {
@@ -75,7 +68,7 @@ export const compactContext = async(chatId:string,model: string) => {
     const messagesToSummarise = []
 
     for (let i=0;i<=compactTriggerIndex;i++) {
-        const currentChatInput = chat.input[i]
+        const currentChatInput = chatInput[i]
 
         if (currentChatInput.type === "function_call") {
             messagesToSummarise.push(JSON.stringify({
@@ -127,16 +120,16 @@ export const compactContext = async(chatId:string,model: string) => {
 
     const response = await openaiResponsesApi({model,input: [{role: "developer", content: prompt}],instructions: summarisationSystemPrompt})
 
+    if (!response.success) {
+        throw new Error(String(response.data))
+    }
+
     const modelResponse = response.data as OpenAI.Responses.Response
-    
-    chat.input.push({
-        "type": "local_compaction",
+
+    return {
+        "type": "local_compaction" as const,
         "id": crypto.randomUUID(),
         "oldestNonCompactedInputIndex": compactTriggerIndex + 1,
         "summary": modelResponse.output_text,
-    })
-    
-    await writeChats(chatsJson)
-
-    return 
+    }
 }

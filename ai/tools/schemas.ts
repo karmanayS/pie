@@ -1,6 +1,6 @@
 import OpenAI from "openai";
 
-const readFileTool = {
+export const readFileTool: OpenAI.Responses.FunctionTool = {
     type: "function",
     name: "read_file",
     description:
@@ -29,7 +29,7 @@ const readFileTool = {
     strict: true,
 }
 
-const writeFileTool = {
+export const writeFileTool: OpenAI.Responses.FunctionTool = {
     type: "function",
     name: "write_file",
     description:
@@ -52,7 +52,7 @@ const writeFileTool = {
     strict: true,
 }
 
-const editFileTool = {
+export const editFileTool: OpenAI.Responses.FunctionTool = {
     type: "function",
     name: "edit_file",
     description:
@@ -84,7 +84,7 @@ const editFileTool = {
     strict: true,
 }
 
-const bashTool = {
+export const bashTool: OpenAI.Responses.FunctionTool = {
     type: "function",
     name: "bash_tool",
     description:
@@ -102,5 +102,3 @@ const bashTool = {
     },
     strict: true,
 }
-
-export const tools = [readFileTool, writeFileTool, editFileTool, bashTool] as OpenAI.Responses.Tool[];

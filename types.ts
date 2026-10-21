@@ -25,6 +25,16 @@ export interface AppState {
     selectedChatId: string | null
 }
 
+export type RunLoopResult =
+    | {
+        success: true
+        output: string
+    }
+    | {
+        success: false
+        error: string
+    }
+
 export type AgentLoopResult =
     | {
         success: true

@@ -1,5 +1,6 @@
 // Has the option to selectively read : offset: 1-indexed start line (negative counts from end). limit: max lines to return.
-export const readFile = async (path: string, offset?: number, limit?: number) => {
+// The model sends null (not undefined) for offset/limit when it wants the whole file, so both are checked with == null
+export const readFile = async (path: string, offset?: number | null, limit?: number | null) => {
     try {
         const file = Bun.file(path)
         if (!(await file.exists())) {
@@ -14,7 +15,7 @@ export const readFile = async (path: string, offset?: number, limit?: number) =>
         const totalLines = lines.length
 
         let start: number
-        if (offset === undefined) {
+        if (offset == null) {
             start = 1
         } else if (offset < 0) {
             start = Math.max(1, totalLines + offset + 1)
@@ -30,7 +31,7 @@ export const readFile = async (path: string, offset?: number, limit?: number) =>
         }
 
         const end =
-            limit === undefined
+            limit == null
                 ? totalLines
                 : Math.min(totalLines, start + Math.max(0, limit) - 1)
 

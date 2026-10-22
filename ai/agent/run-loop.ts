@@ -64,10 +64,11 @@ export const runLoop = async(args: RunLoopArgs): Promise<RunLoopResult> => {
         for (const item of modelResponse.output) {
             if (item.type !== "function_call") continue
 
+            // every function_call needs an output, otherwise the next request fails
             const toolName = item.name as ToolName
-            if (!args.tools.includes(toolName)) continue
-
-            const output = await toolRegistry[toolName].run(item.arguments)
+            const output = args.tools.includes(toolName)
+                ? await toolRegistry[toolName].run(item.arguments)
+                : `Unknown tool: ${item.name}`
             const outputToPush: OpenAI.Responses.ResponseInputItem = {
                 type: "function_call_output",
                 call_id: item.call_id,

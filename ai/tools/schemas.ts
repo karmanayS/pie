@@ -102,3 +102,23 @@ export const bashTool: OpenAI.Responses.FunctionTool = {
     },
     strict: true,
 }
+
+export const spawnAgentTool: OpenAI.Responses.FunctionTool = {
+    type: "function",
+    name: "spawn_agent",
+    description:
+        "Delegate a read-only investigation to a subagent with its own fresh context. The subagent cannot see this conversation, so the task must be self-contained. It can read files and run shell commands but cannot edit files. Returns only the subagent's final report.",
+    parameters: {
+        type: "object",
+        properties: {
+            task: {
+                type: "string",
+                description:
+                    "Self-contained task: what to investigate, any known paths or names, and what the report should contain",
+            },
+        },
+        required: ["task"],
+        additionalProperties: false,
+    },
+    strict: true,
+}
